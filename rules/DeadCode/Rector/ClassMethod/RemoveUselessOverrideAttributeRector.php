@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Rector\DeadCode\Rector\ClassMethod;
 
@@ -92,11 +92,11 @@ CODE_SAMPLE
     public function refactor(Node $node): ?Node
     {
         $classReflection = $this->reflectionResolver->resolveClassReflection($node);
-        if (!$classReflection instanceof ClassReflection) {
+        if (! $classReflection instanceof ClassReflection) {
             return null;
         }
 
-        if (!$classReflection->isClass()) {
+        if (! $classReflection->isClass()) {
             return null;
         }
 
@@ -105,34 +105,37 @@ CODE_SAMPLE
         }
 
         /** @var ClassMethod $node */
-        if (!$this->phpAttributeAnalyzer->hasPhpAttribute($node, 'Override')) {
+        if (! $this->phpAttributeAnalyzer->hasPhpAttribute($node, 'Override')) {
             return null;
         }
 
         $methodName = $node->name->name;
 
         // Analyzing phase
-        $notFoundInInterfaces = false;
         $interfaces = $classReflection->getInterfaces();
         if (count($interfaces) > 0) {
+            $notFoundInInterfaces = [];
             foreach ($interfaces as $interfaceReflection) {
                 $notFoundInInterfaces[] = $this->findMethod($interfaceReflection, $methodName, $node);
             }
         }
 
-        $notFoundInParentClass = false;
         $parentClass = $classReflection->getParentClass();
         if ($parentClass !== null) {
+            $notFoundInParentClass = [];
             $notFoundInParentClass = [$this->findMethod($parentClass, $methodName, $node)];
         }
 
         // Finding and Removing phase
         /// If method appears in interfaces OR parent class
-        if (is_array($notFoundInParentClass) && !$notFoundInInterfaces) {
+        if (isset($notFoundInParentClass) && ! isset($notFoundInInterfaces)) {
             $toIterate = $notFoundInParentClass;
-        } elseif (is_array($notFoundInInterfaces) && !$notFoundInParentClass) {
+        } elseif (isset($notFoundInInterfaces) && ! isset($notFoundInParentClass)) {
             $toIterate = $notFoundInInterfaces;
+        } elseif (! isset($notFoundInParentClass) && ! isset($notFoundInInterfaces)) {
+            return null;
         }
+
         /// Removing phase
         if (isset($toIterate)) {
             $this->itemsToRemove($toIterate, $node);
@@ -141,7 +144,10 @@ CODE_SAMPLE
         }
         //// If method appears in both
         ///// Match a method ONLY IF it wasn't found in interfaces AND parent class
-        $shouldRemove = array_filter($notFoundInParentClass, static function ($value) use ($notFoundInInterfaces) {
+        $notFoundInInterfaces ??= [];
+        $shouldRemove = array_filter($notFoundInParentClass ?? [], static function ($value) use (
+            $notFoundInInterfaces
+        ) {
             if (count($value) < 1) {
                 return false;
             }
@@ -150,6 +156,9 @@ CODE_SAMPLE
             $v = $value[$k];
 
             foreach ($notFoundInInterfaces as $item) {
+                if (count($item) === 0) {
+                    continue;
+                }
                 $ik = array_key_first($item);
                 $iv = $item[$ik];
                 if ($k === $ik && $v === $iv) {
@@ -166,16 +175,21 @@ CODE_SAMPLE
         return $node;
     }
 
+    /**
+     * @return array<int,int>
+     */
     private function findMethod(
         ClassReflection $reflection,
         string $methodName,
-        ClassMethod|Function_|Node $node
+        ClassMethod|Function_ $node
     ): array {
-        if (!$reflection->hasMethod($methodName)) {
+        if (! $reflection->hasMethod($methodName)) {
             foreach ($node->attrGroups as $key => $attrGroup) {
                 foreach ($attrGroup->attrs as $attrKey => $attr) {
                     if ($this->isName($attr->name, 'Override')) {
-                        return [$key => $attrKey];
+                        return [
+                            $key => $attrKey,
+                        ];
                     }
                 }
             }
@@ -184,9 +198,12 @@ CODE_SAMPLE
         return [];
     }
 
-    private function itemsToRemove(array|false $shouldRemove, ClassMethod|Function_|Node $node): void
+    /**
+     * @param  array<array<int,int>>    $items
+     */
+    private function itemsToRemove(array $items, ClassMethod|Function_ $node): void
     {
-        foreach ($shouldRemove as $item) {
+        foreach ($items as $item) {
             if (count($item) > 0) {
                 $k = array_key_first($item);
                 $v = $item[$k];
@@ -196,13 +213,14 @@ CODE_SAMPLE
         }
     }
 
-    private function removeAttribute(ClassMethod|Function_|Node $node, int|string $key, int|string $attrKey): void
+    private function removeAttribute(ClassMethod|Function_ $node, int|string $key, int|string $attrKey): void
     {
         // Remove Override attribute
         unset($node->attrGroups[$key]->attrs[$attrKey]);
 
         // Remove empty attribute groups
-        if (empty($node->attrGroups[$key]->attrs)) {
+        /* @phpstan-ignore-next-line */
+        if (count($node->attrGroups[$key]->attrs) === 0) {
             unset($node->attrGroups[$key]);
         }
     }
