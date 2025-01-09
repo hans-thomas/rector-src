@@ -2,14 +2,14 @@
 
 namespace Rector\Tests\DeadCode\Rector\ClassMethod\RemoveUselessOverrideAttributeRector\Fixture;
 
-abstract class extendsAbstractContract
+abstract class ExtendsAbstractContract
 {
     public function foo(): void{
         echo 'self';
     }
 }
 
-final class extendsAbstract extends extendsAbstractContract
+final class ExtendsAbstractClass extends ExtendsAbstractContract
 {
     #[\Override]
     public function foo(): void
@@ -29,14 +29,14 @@ final class extendsAbstract extends extendsAbstractContract
 
 namespace Rector\Tests\DeadCode\Rector\ClassMethod\RemoveUselessOverrideAttributeRector\Fixture;
 
-abstract class extendsAbstractContract
+abstract class ExtendsAbstractContract
 {
     public function foo(): void{
         echo 'self';
     }
 }
 
-final class extendsAbstract extends extendsAbstractContract
+final class ExtendsAbstractClass extends ExtendsAbstractContract
 {
     #[\Override]
     public function foo(): void

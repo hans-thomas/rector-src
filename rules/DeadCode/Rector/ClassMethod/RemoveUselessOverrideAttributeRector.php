@@ -141,7 +141,7 @@ CODE_SAMPLE
         }
         //// If method appears in both
         ///// Match a method ONLY IF it wasn't found in interfaces AND parent class
-        $shouldRemove = array_filter($notFoundInParentClass, function ($value) use ($notFoundInInterfaces) {
+        $shouldRemove = array_filter($notFoundInParentClass, static function ($value) use ($notFoundInInterfaces) {
             if (count($value) < 1) {
                 return false;
             }
@@ -184,23 +184,6 @@ CODE_SAMPLE
         return [];
     }
 
-    private function removeAttribute(ClassMethod|Function_|Node $node, int|string $key, int|string $attrKey): void
-    {
-        // Remove Override attribute
-        unset($node->attrGroups[$key]->attrs[$attrKey]);
-
-        // Remove empty attribute groups
-        if (empty($node->attrGroups[$key]->attrs)) {
-            unset($node->attrGroups[$key]);
-        }
-    }
-
-    /**
-     * @param  array|false                 $shouldRemove
-     * @param  ClassMethod|Function_|Node  $node
-     *
-     * @return void
-     */
     private function itemsToRemove(array|false $shouldRemove, ClassMethod|Function_|Node $node): void
     {
         foreach ($shouldRemove as $item) {
@@ -210,6 +193,17 @@ CODE_SAMPLE
 
                 $this->removeAttribute($node, $k, $v);
             }
+        }
+    }
+
+    private function removeAttribute(ClassMethod|Function_|Node $node, int|string $key, int|string $attrKey): void
+    {
+        // Remove Override attribute
+        unset($node->attrGroups[$key]->attrs[$attrKey]);
+
+        // Remove empty attribute groups
+        if (empty($node->attrGroups[$key]->attrs)) {
+            unset($node->attrGroups[$key]);
         }
     }
 }

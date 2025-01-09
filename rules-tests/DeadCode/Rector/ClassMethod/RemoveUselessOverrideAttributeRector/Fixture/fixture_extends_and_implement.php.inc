@@ -15,7 +15,7 @@ abstract class ExtendsAndImplementContract
     }
 }
 
-final class ExtendsAndImplement extends ExtendsAndImplementContract implements ExtendsAndImplementInterface
+final class ExtendsAndImplementClass extends ExtendsAndImplementContract implements ExtendsAndImplementInterface
 {
     #[\Override]
     public function foo(): void
@@ -54,7 +54,7 @@ abstract class ExtendsAndImplementContract
     }
 }
 
-final class ExtendsAndImplement extends ExtendsAndImplementContract implements ExtendsAndImplementInterface
+final class ExtendsAndImplementClass extends ExtendsAndImplementContract implements ExtendsAndImplementInterface
 {
     #[\Override]
     public function foo(): void
